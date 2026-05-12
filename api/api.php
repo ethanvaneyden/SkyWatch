@@ -1,12 +1,9 @@
 <?php
 //Ethan Van Eyden
 //u25260244
-require_once "COS216/PA3/config.php";
+require_once "config.php";
 header('Content-Type: application/json');
-/**
- * Handles routing and processing of POST requests
- * Validates input, checks API keys, and delegates logic to service classes.
- */
+
 class LuminaAPI
 {
     private $db;
