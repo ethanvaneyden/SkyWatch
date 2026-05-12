@@ -93,6 +93,13 @@ class LuminaAPI
                     $response = $flights->getFlight();
                     $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
                 }
+                case "GetAirports":
+                if ($this->checkAPIKey($this->requestData)) {
+                    $airports = new AirportsService($this->db, $this->requestData);
+                    $response = $airports->getAllAirports();
+                    $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
+                }
+                break;
             default:
                 $this->sendResponse("error", "Unknown request type.", 400);
                 break;
@@ -466,6 +473,27 @@ class AirportsService
 
         $sql = $this->buildQuery();
         return $this->executeQuery($sql);
+    }
+
+    public function getAllAirports()
+    {
+        try {
+            $stmt = $this->db->query("SELECT *
+        FROM airports");
+            $airports = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return [
+                'status' => 'success',
+                'data' => $airports,
+                'responseCode' => 200
+            ];
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return [
+                'status' => 'error',
+                'data' => 'Failed to retrieve airports.',
+                'responseCode' => 500
+            ];
+        }
     }
 
     private function buildQuery()
