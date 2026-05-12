@@ -87,6 +87,12 @@ class LuminaAPI
                     $response = $flights->getAllFlights();
                     $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
                 }
+            case "GetFlight":
+                if ($this->checkAPIKey($this->requestData)) {
+                    $flights = new FlightsService($this->db, $this->requestData, $this->currentUserId);
+                    $response = $flights->getFlight();
+                    $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
+                }
             default:
                 $this->sendResponse("error", "Unknown request type.", 400);
                 break;
@@ -947,6 +953,62 @@ class FlightsService
         }
     }
 
+    public function getFlight()
+    {
+        if (empty($this->data['flight_id'])) {
+            return [
+                'status' => 'error',
+                'data' => 'Missing flight_id.',
+                'responseCode' => 400
+            ];
+        }
+
+        try {
+            $user = $this->getUser();
+            $flight = $this->getFlightById();
+
+            if (!$flight) {
+                return [
+                    'status' => 'error',
+                    'data' => 'Flight not found.',
+                    'responseCode' => 404
+                ];
+            }
+
+            if ($user['type'] === 'Passenger') {
+                if (!$this->isPassengerBooked()) {
+                    return [
+                        'status' => 'error',
+                        'data' => 'Passenger not booked on flight.',
+                        'responseCode' => 403
+                    ];
+                }
+                return [
+                    'status' => 'success',
+                    'data' => ['flight' => $flight],
+                    'responseCode' => 200
+                ];
+            } else {
+                $passengerList = $this->getPassengerList();
+                return [
+                    'status' => 'success',
+                    'data' => [
+                        'flight' => $flight,
+                        'passengers' => $passengerList
+                    ],
+                    'responseCode' => 200
+                ];
+            }
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return [
+                'status' => 'error',
+                'data' => 'Failed to retrieve flights',
+                'responseCode' => 500
+            ];
+        }
+    }
+
     private function getUser()
     {
         $stmt = $this->db->prepare("SELECT type
@@ -973,7 +1035,7 @@ class FlightsService
             pf.boarding_confirmed
         FROM passenger_flights pf
         JOIN skywatch_flights f on pf.flight_id = f.id
-        WHERE pf.user_id = ?");
+        WHERE pf.passenger_id = ?");
 
         $stmt->execute([$this->currentUserId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -995,6 +1057,52 @@ class FlightsService
          FROM skywatch_flights
          ORDER BY departure_time"
         );
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function isPassengerBooked()
+    {
+        $stmt = $this->db->prepare("SELECT id 
+        FROM passenger_flights
+        WHERE flight_id = ?
+        AND passenger_id = ?");
+        $stmt->execute([$this->data['flight_id'], $this->currentUserId]);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    private function getFlightById()
+    {
+        $stmt = $this->db->prepare("SELECT
+            id as flight_id,
+            flight_number,
+            origin_airport_id,
+            destination_airport_id,
+            departure_time,
+            status,
+            current_latitude,
+            current_longitude,
+            flight_duration_hours,
+            dispatched_at
+        FROM skywatch_flights
+        WHERE id = ? ");
+        $stmt->execute([$this->data['flight_id']]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    private function getPassengerList()
+    {
+        $stmt = $this->db->prepare("SELECT
+        u.id as passenger_id,
+        u.name,
+        u.surname,
+        pf.seat_number,
+        pf.boarding_confirmed,
+        pf.confirmed_at
+        FROM users u
+        JOIN passenger_flights pf on pf.passenger_id = u.id
+        WHERE pf.flight_id = ? 
+        ");
+        $stmt->execute([$this->data['flight_id']]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
