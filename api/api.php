@@ -81,6 +81,12 @@ class LuminaAPI
                     $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
                 }
                 break;
+            case "GetAllFlights":
+                if ($this->checkAPIKey($this->requestData)) {
+                    $flights = new FlightsService($this->db, $this->requestData, $this->currentUserId);
+                    $response = $flights->getAllFlights();
+                    $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
+                }
             default:
                 $this->sendResponse("error", "Unknown request type.", 400);
                 break;
@@ -899,6 +905,97 @@ class BookingService
         $cruise_minutes = $cruise_hours * 60;
 
         return (int)($cruise_minutes + $tcd + 15);
+    }
+}
+
+class FlightsService
+{
+    private $db;
+    private $data;
+    private $currentUserId;
+
+    public function __construct($db, $data, $currentUserId = null)
+    {
+        $this->db = $db;
+        $this->data = $data;
+        $this->currentUserId = $currentUserId;
+    }
+
+    public function getAllFlights()
+    {
+        try {
+            $user = $this->getUser();
+
+            if ($user['type'] === 'Passenger') {
+                $flights = $this->getPassengerFlights();
+            } else {
+                $flights = $this->getATCFlights();
+            }
+
+            return [
+                'status' => 'success',
+                'data' => $flights,
+                'responseCode' => 200
+            ];
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return [
+                'status' => 'error',
+                'data' => 'Failed to retrieve flights',
+                'responseCode' => 500
+            ];
+        }
+    }
+
+    private function getUser()
+    {
+        $stmt = $this->db->prepare("SELECT type
+            FROM users
+            WHERE id = ?");
+        $stmt->execute([$this->currentUserId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    private function getPassengerFlights()
+    {
+        $stmt = $this->db->prepare("SELECT pf.id AS booking_id,
+            f.id as flight_id,
+            f.flight_number,
+            f.origin_airport_id,
+            f.destination_airport_id,
+            f.departure_time,
+            f.status,
+            f.current_latitude,
+            f.current_longitude,
+            f.flight_duration_hours,
+            f.dispatched_at,
+            pf.seat_number,
+            pf.boarding_confirmed
+        FROM passenger_flights pf
+        JOIN skywatch_flights f on pf.flight_id = f.id
+        WHERE pf.user_id = ?");
+
+        $stmt->execute([$this->currentUserId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function getATCFlights()
+    {
+        $stmt = $this->db->query(
+            "SELECT id as flight_id,
+                flight_number,
+                origin_airport_id,
+                destination_airport_id,
+                departure_time,
+                status,
+                current_latitude,
+                current_longitude,
+                flight_duration_hours,
+                dispatched_at
+         FROM skywatch_flights
+         ORDER BY departure_time"
+        );
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 
