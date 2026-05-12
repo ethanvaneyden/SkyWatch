@@ -8,10 +8,10 @@
 
 ## 1. Authentication Overview
 
-| Endpoint Type | Authentication | How |
-|---------------|----------------|-----|
-| **User‑scoped** (`GetAllFlights`, `GetFlight`, `DispatchFlight`, `BoardFlight`, `GetAirports`) | User API key | Include `"apikey": "<key>"` in the JSON body. The key is obtained during client login and stored per socket. |
-| **Server‑to‑server** (`UpdateFlightPosition`) | Internal shared secret | Include `"internal_key": "YOUR_SECRET"` in the JSON body. No user key needed. |
+| Endpoint Type                                                                                  | Authentication         | How                                                                                                          |
+| ---------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **User‑scoped** (`GetAllFlights`, `GetFlight`, `DispatchFlight`, `BoardFlight`, `GetAirports`) | User API key           | Include `"apikey": "<key>"` in the JSON body. The key is obtained during client login and stored per socket. |
+| **Server‑to‑server** (`UpdateFlightPosition`)                                                  | Internal shared secret | Include `"internal_key": "YOUR_SECRET"` in the JSON body. No user key needed.                                |
 
 **Note:** The API enforces role permissions (e.g., only ATC can dispatch). Your Node.js server should cache the user’s type after login so it can pre‑validate requests before calling the API, but the API will also return a `403` if the role is wrong.
 
@@ -79,23 +79,38 @@ json
   "type": "GetAllFlights",
   "apikey": "<user's API key>"
 }
-Success Response (200) – Example flight object
+Success Response (200) – Example flight object for passenger
 
 json
 {
-  "id": 3,
-  "flight_number": "SA203",
-  "origin": "O. R. Tambo International",
-  "destination": "Cape Town International",
-  "origin_airport_id": 1,
-  "destination_airport_id": 2,
-  "departure_time": "2026-05-12 14:00:00",
-  "flight_duration_hours": 2.0,
-  "status": "Scheduled",
-  "current_latitude": -26.1392,
-  "current_longitude": 28.2460,
-  "dispatched_at": null
-}
+      "booking_id": 102,
+      "flight_id": 3,
+      "flight_number": "SA203",
+      "origin_airport_id": 1,
+      "destination_airport_id": 2,
+      "departure_time": "2026-05-12 14:00:00",
+      "status": "Scheduled",
+      "current_latitude": -26.1392,
+      "current_longitude": 28.2460,
+      "flight_duration_hours": 2.0,
+      "dispatched_at": null,
+      "seat_number": "12A",
+      "boarding_confirmed": 0
+    }
+
+Example flight object for ATC
+     {
+      "flight_id": 3,
+      "flight_number": "SA203",
+      "origin_airport_id": 1,
+      "destination_airport_id": 2,
+      "departure_time": "2026-05-12 14:00:00",
+      "flight_duration_hours": 2.0,
+      "status": "Scheduled",
+      "current_latitude": -26.1392,
+      "current_longitude": 28.2460,
+      "dispatched_at": null
+     }
 Errors: 401 – invalid key.
 
 3.3 GetFlight
@@ -289,3 +304,4 @@ Validate user roles before making API calls that require ATC privileges – but 
 Cache the airport list from GetAirports permanently (or until server restart). Airports rarely change.
 
 Cache each user’s type (ATC/Passenger) after their login to avoid repeated DB lookups.
+```
