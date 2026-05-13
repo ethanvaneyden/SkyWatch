@@ -9,6 +9,7 @@ class LuminaAPI
     private $db;
     private $requestData;
     private $currentUserId;
+    private const SECRETKEY = '1NCWC8zeZcKXZJ5ugEFWPfpVbZD0AFAO3U78GPJoNdBXIAHr86u9JQXhPhGpEehq';
 
     public function __construct($dbconnection)
     {
@@ -107,6 +108,13 @@ class LuminaAPI
                     $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
                 }
                 break;
+            case "UpdateFlightPosition":
+                if ($this->checkSecretKey()) {
+                    $flight = new FlightsService($this->db, $this->requestData);
+                    $response = $flight->updateFlightPosition();
+                    $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
+                }
+                break;
             default:
                 $this->sendResponse("error", "Unknown request type.", 400);
                 break;
@@ -148,6 +156,20 @@ class LuminaAPI
         } catch (PDOException $e) {
             $this->sendResponse("error", $e->getCode());
         }
+    }
+
+    private function checkSecretKey()
+    {
+
+        if (empty($this->requestDatadata["secret_key"])) {
+            $this->sendResponse("error", "Missing API key.", 400);
+        }
+
+        if (self::SECRETKEY !== $this->requestData['secret_key']) {
+            $this->sendResponse("error", "The API key is invalid.", 401);
+        }
+
+        return true;
     }
 }
 
@@ -1091,7 +1113,7 @@ class FlightsService
             $stmt = $this->db->prepare("SELECT dispatched_at FROM skywatch_flights WHERE id = ?");
             $stmt->execute([$this->data['flight_id']]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
 
             return [
                 'status' => 'success',
@@ -1107,6 +1129,72 @@ class FlightsService
             return [
                 'status' => 'error',
                 'data' => 'Unable to dispatch flight',
+                'responseCode' => 500
+            ];
+        }
+    }
+
+    public function updateFlightPosition()
+    {
+        $flightId = $this->data['flight_id'] ?? null;
+        $latitude = $this->data['latitude'] ?? 0;
+        $longitude = $this->data['longitude'] ?? 0;
+        $status = $this->data['status'] ?? null;
+
+        try {
+
+            if (empty($this->data['flight_id'])) {
+                return [
+                    'status' => 'error',
+                    'data'   => 'Missing flight_id.',
+                    'responseCode' => 400
+                ];
+            }
+
+            if (!isset($this->data['latitude']) || !isset($this->data['longitude'])) {
+                return [
+                    'status' => 'error',
+                    'data'   => 'Missing latitude or longitude.',
+                    'responseCode' => 400
+                ];
+            }
+
+            if ($status !== null) {
+                $stmt = $this->db->prepare("UPDATE skywatch_flights
+                SET current_latitude = ?,
+                current_longitude = ?,
+                status = ?
+                WHERE id = ?");
+
+                $stmt->execute([$latitude, $longitude, $status, $flightId]);
+            } else {
+                $stmt = $this->db->prepare("UPDATE skywatch_flights
+                SET current_latitude = ?,
+                current_longitude = ?
+                WHERE id = ?");
+
+                $stmt->execute([$latitude, $longitude, $flightId]);
+            }
+
+            if ($stmt->rowCount() === 0) {
+                return [
+                    'status' => 'error',
+                    'data'   => 'Flight not found.',
+                    'responseCode' => 404
+                ];
+            }
+
+            return [
+                'status' => 'success',
+                'data'   => ['message' => 'Position updated'],
+                'responseCode' => 200
+            ];
+            
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return [
+                'status' => 'error',
+                'data' => 'Unable to update position',
                 'responseCode' => 500
             ];
         }
