@@ -93,10 +93,17 @@ class LuminaAPI
                     $response = $flights->getFlight();
                     $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
                 }
-                case "GetAirports":
+            case "GetAirports":
                 if ($this->checkAPIKey($this->requestData)) {
                     $airports = new AirportsService($this->db, $this->requestData);
                     $response = $airports->getAllAirports();
+                    $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
+                }
+                break;
+            case "DispatchFlight":
+                if ($this->checkAPIKey($this->requestData)) {
+                    $dispatcher = new FlightsService($this->db, $this->requestData, $this->currentUserId);
+                    $response = $dispatcher->dispatchFlight();
                     $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
                 }
                 break;
@@ -1032,6 +1039,74 @@ class FlightsService
             return [
                 'status' => 'error',
                 'data' => 'Failed to retrieve flights',
+                'responseCode' => 500
+            ];
+        }
+    }
+
+    public function dispatchFlight()
+    {
+        try {
+            if (empty($this->data['flight_id'])) {
+                return [
+                    'status' => 'error',
+                    'data' => 'Missing flight_id.',
+                    'responseCode' => 400
+                ];
+            }
+
+            $user = $this->getUser();
+            $flight = $this->getFlightById();
+
+            if (!$flight) {
+                return [
+                    'status' => 'error',
+                    'data' => 'Flight not found.',
+                    'responseCode' => 404
+                ];
+            }
+
+            if ($user['type'] !== "ATC") {
+                return [
+                    'status' => 'error',
+                    'data' => 'User is not ATC.',
+                    'responseCode' => 403
+                ];
+            }
+
+            if ($flight['status'] !== 'Scheduled') {
+                return [
+                    'status' => 'error',
+                    'data' => 'Flight not scheduled',
+                    'responseCode' => 400
+                ];
+            }
+
+            $stmt = $this->db->prepare("UPDATE skywatch_flights 
+                SET status = 'Boarding',
+                dispatched_at = NOW()
+                WHERE id = ?");
+            $stmt->execute([$this->data['flight_id']]);
+
+            $stmt = $this->db->prepare("SELECT dispatched_at FROM skywatch_flights WHERE id = ?");
+            $stmt->execute([$this->data['flight_id']]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+
+            return [
+                'status' => 'success',
+                'data' => [
+                    'flight_id' => $this->data['flight_id'],
+                    'new_status' => 'Boarding',
+                    'dispatched_at' => $row['dispatched_at']
+                ],
+                'responseCode' => 200
+            ];
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return [
+                'status' => 'error',
+                'data' => 'Unable to dispatch flight',
                 'responseCode' => 500
             ];
         }
