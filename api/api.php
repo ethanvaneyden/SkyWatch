@@ -1277,7 +1277,7 @@ class FlightsService
 
             return [
                 'status' => 'success',
-                'data'   => 'Position updated',
+                'data'   => 'Position updated.',
                 'responseCode' => 200
             ];
         } catch (PDOException $e) {
