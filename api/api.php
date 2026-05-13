@@ -9,7 +9,6 @@ class LuminaAPI
     private $db;
     private $requestData;
     private $currentUserId;
-    private const SECRETKEY = '1NCWC8zeZcKXZJ5ugEFWPfpVbZD0AFAO3U78GPJoNdBXIAHr86u9JQXhPhGpEehq';
 
     public function __construct($dbconnection)
     {
@@ -88,12 +87,14 @@ class LuminaAPI
                     $response = $flights->getAllFlights();
                     $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
                 }
+                break;
             case "GetFlight":
                 if ($this->checkAPIKey($this->requestData)) {
                     $flights = new FlightsService($this->db, $this->requestData, $this->currentUserId);
                     $response = $flights->getFlight();
                     $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
                 }
+                break;
             case "GetAirports":
                 if ($this->checkAPIKey($this->requestData)) {
                     $airports = new AirportsService($this->db, $this->requestData);
@@ -112,6 +113,13 @@ class LuminaAPI
                 if ($this->checkSecretKey()) {
                     $flight = new FlightsService($this->db, $this->requestData);
                     $response = $flight->updateFlightPosition();
+                    $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
+                }
+                break;
+            case "BoardFlight":
+                if ($this->checkAPIKey($this->requestData)) {
+                    $dispatcher = new FlightsService($this->db, $this->requestData, $this->currentUserId);
+                    $response = $dispatcher->boardFlight();
                     $this->sendResponse($response['status'], $response['data'], $response['responseCode']);
                 }
                 break;
@@ -161,11 +169,11 @@ class LuminaAPI
     private function checkSecretKey()
     {
 
-        if (empty($this->requestDatadata["secret_key"])) {
-            $this->sendResponse("error", "Missing API key.", 400);
+        if (empty($this->requestData["internal_key"])) {
+            $this->sendResponse("error", "Missing internal key.", 400);
         }
 
-        if (self::SECRETKEY !== $this->requestData['secret_key']) {
+        if (INTERNAL_API_KEY !== $this->requestData['secret_key']) {
             $this->sendResponse("error", "The API key is invalid.", 401);
         }
 
@@ -1066,6 +1074,89 @@ class FlightsService
         }
     }
 
+    public function boardFlight()
+    {
+        if (empty($this->data['flight_id'])) {
+            return [
+                'status' => 'error',
+                'data'   => 'Missing flight_id.',
+                'responseCode' => 400
+            ];
+        }
+        try {
+            $user = $this->getUser();
+            $flightId = (int) $this->data['flight_id'];
+            $flight = $this->getFlightById();
+
+            if (!$flight) {
+                return [
+                    'status' => 'error',
+                    'data'   => 'Flight not found.',
+                    'responseCode' => 404
+                ];
+            }
+
+
+            if ($user['type'] !== 'Passenger') {
+                return [
+                    'status' => 'error',
+                    'data'   => 'Only passengers can board flights.',
+                    'responseCode' => 403
+                ];
+            }
+            $booking = $this->getPassengerBooking($this->currentUserId, $flightId);
+
+            if (!$booking) {
+                return [
+                    'status' => 'error',
+                    'data'   => 'You are not booked on this flight.',
+                    'responseCode' => 403
+                ];
+            }
+
+
+            if ($flight['status'] !== 'Boarding') {
+                return [
+                    'status' => 'error',
+                    'data'   => 'Flight is not in Boarding state.',
+                    'responseCode' => 400
+                ];
+            }
+
+            if (!$this->isBoardingWindowOpen($flight['dispatched_at'])) {
+                return [
+                    'status' => 'error',
+                    'data'   => 'Boarding window has expired.',
+                    'responseCode' => 400
+                ];
+            }
+
+            $stmt = $this->db->prepare("UPDATE passenger_flights
+            SET boarding_confirmed = 1,
+            confirmed_at = NOW()
+            WHERE passenger_id = ?
+            AND flight_id = ?");
+
+            $stmt->execute([$this->currentUserId, $flightId]);
+
+            return [
+                'status' => 'success',
+                'data'   => [
+                    'message' => 'Boarding confirmed',
+                    'flight_id' => $flightId
+                ],
+                'responseCode' => 200
+            ];
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return [
+                'status' => 'error',
+                'data' => 'Unable to board flight',
+                'responseCode' => 500
+            ];
+        }
+    }
+
     public function dispatchFlight()
     {
         try {
@@ -1186,10 +1277,9 @@ class FlightsService
 
             return [
                 'status' => 'success',
-                'data'   => ['message' => 'Position updated'],
+                'data'   => 'Position updated',
                 'responseCode' => 200
             ];
-            
         } catch (PDOException $e) {
             error_log($e->getMessage());
             return [
@@ -1200,12 +1290,34 @@ class FlightsService
         }
     }
 
+    private function isBoardingWindowOpen($dispatchedAt)
+    {
+        if ($dispatchedAt === null) {
+            return false;
+        }
+
+        $dispatchTime = strtotime($dispatchedAt);
+        $elapsed = time() - $dispatchTime;
+        return $elapsed <= 60;
+    }
+
     private function getUser()
     {
         $stmt = $this->db->prepare("SELECT type
             FROM users
             WHERE id = ?");
         $stmt->execute([$this->currentUserId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    private function getPassengerBooking($passengerID, $flightID)
+    {
+        $stmt = $this->db->prepare("SELECT *
+        FROM passenger_flights
+        where passenger_id = ?
+        and flight_id = ?
+        ");
+        $stmt->execute([$passengerID, $flightID]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
