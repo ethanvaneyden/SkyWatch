@@ -278,7 +278,7 @@ class UserService
             ];
         }
 
-        $stmt = $this->db->prepare("SELECT id, password, api_key FROM users WHERE email = ?");
+        $stmt = $this->db->prepare("SELECT * WHERE email = ?");
         $stmt->execute([$data['email']]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$user || !password_verify($data['password'], $user['password'])) {
@@ -291,7 +291,11 @@ class UserService
         return [
             'status' => 'success',
             'data' => [
-                'apikey' => $user['api_key']
+                'apikey' => $user['api_key'],
+                'name' => $user['name'],
+                'surname' => $user['surname'],
+                'email' => $user['email'],
+                'type' => $user['type']
             ],
             'responseCode' => 200
         ];
