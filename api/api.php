@@ -278,7 +278,7 @@ class UserService
             ];
         }
 
-        $stmt = $this->db->prepare("SELECT * WHERE email = ?");
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
         $stmt->execute([$data['email']]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$user || !password_verify($data['password'], $user['password'])) {
