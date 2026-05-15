@@ -1380,18 +1380,25 @@ class FlightsService
     private function getFlightById()
     {
         $stmt = $this->db->prepare("SELECT
-            id as flight_id,
-            flight_number,
-            origin_airport_id,
-            destination_airport_id,
-            departure_time,
-            status,
-            current_latitude,
-            current_longitude,
-            flight_duration_hours,
-            dispatched_at
-        FROM skywatch_flights
-        WHERE id = ? ");
+            f.id as flight_id,
+            f.flight_number,
+            f.origin_airport_id,
+            f.destination_airport_id,
+            f.departure_time,
+            f.status,
+            f.current_latitude,
+            f.current_longitude,
+            f.flight_duration_hours,
+            f.dispatched_at,
+            ao.latitude AS lat1,
+            ao.longitude AS lon1,
+            ad.latitude AS lat2,
+            ad.longitude AS lon2
+
+        FROM skywatch_flights f
+        JOIN airports ao ON f.origin_airport_id = ao.id
+        JOIN airports ad ON f.destination_airport_id = ad.id
+        WHERE f.id = ? ");
         $stmt->execute([$this->data['flight_id']]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
