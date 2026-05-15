@@ -2,7 +2,6 @@
 //server.js
 
 require('dotenv').config();
-
 const {handleMessage} = require('./handlers/messageHandler');
 const {removeClient, getAllClients} = require('./utils/clientManager');
 const {unsubscribe} = require('./utils/subscriptionManager');

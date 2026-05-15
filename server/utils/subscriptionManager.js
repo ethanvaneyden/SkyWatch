@@ -8,6 +8,11 @@ function subscribe(flightId, ws){
         subscriptions.set(flightId, new Set());
     }
 
+    if (subscriptions.get(flightId)?.has(ws)){
+        console.log(`${ws.username} is already subscribed to flight ${flightId}`);
+        return;
+    }
+    
     subscriptions.get(flightId).add(ws);
     console.log(`${ws.username} subscribed to flight ${flightId}`);
 }

@@ -7,7 +7,7 @@ const API_URL = process.env.API_URL;
 async function apiRequest(body){
     try{
         const response = await axios.post(API_URL, body, {
-            header: {
+            headers: {
                 'Content-Type': 'application/json'
             },
             timeout: 5000 //to avoid hanging forever if API dies
@@ -16,10 +16,20 @@ async function apiRequest(body){
         return response.data;
     }
     catch(error){
-        console.error('API Request Error:', error);
+        if(error.response){
+            // If API responded with error (like 401, 400, etc)
+            return {
+                status: "error",
+                data: error.response.data,
+                responseCode: error.response.status
+            }
+        }
+
+        //OR Network or timeout error
         return {
             status: 'error',
-            data: 'Failed to connect to API'
+            data: 'Network error contacting API',
+            responseCode: 500
         };
     }
 }

@@ -11,7 +11,7 @@ class FlightMovement{
 
     start(){
         const durationMs = this.flight.flight_duration_hours * 1000;
-        const stepTime = 1000;
+        const stepTime = 100;
 
         this.interval = setInterval(() => {
             this.progress += stepTime / durationMs;

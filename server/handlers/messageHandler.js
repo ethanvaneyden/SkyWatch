@@ -3,61 +3,22 @@
 const {addClient, getClient} = require('../utils/clientManager');
 const {subscribe, getSubscribers} = require('../utils/subscriptionManager');
 const { apiRequest } = require('../services/apiService');
-
+const { startFlightTracking } = require('../services/flightTracker');
 async function handleMessage(ws, message){
     try{
         const data = JSON.parse(message.toString());
-        switch(data.type){
+
+        if(!data.type){
+            ws.send(JSON.stringify({
+                type: 'ERROR',
+                message: 'Missing request type'
+            }));
+
+            return;
+        }
+
+        switch(data.type.toUpperCase()){
             case 'LOGIN':
-                /*if(!data.username || !data.role){
-                        ws.send(JSON.stringify({
-                            type: 'ERROR',
-                            message: 'Missing username or role'
-                        }));
-
-                        break;
-                }
-
-                const username = data.username.toLowerCase();
-                const role = data.role.toUpperCase();
-                const validRoles = ['ATC', 'PASSENGER'];
-
-                if(!validRoles.includes(role)){
-                    ws.send(JSON.stringify({
-                        type: 'ERROR',
-                        message: 'Invalid role'
-                    }))
-
-                    break;
-                }
-                
-                const existingClient = getClient(username);
-                
-                if(existingClient){
-                    ws.send(JSON.stringify({
-                        type: 'ERROR',
-                        message: `${username} is already connected`
-                    }));
-
-                    break;
-                }
-                if(ws.username){
-                    ws.send(JSON.stringify({
-                        type: 'ERROR',
-                        message: `${ws.username} is already logged in on this connection`
-                    }));
-
-                    break;
-                }
-
-                addClient(username, ws, role);
-                ws.username = username;
-                ws.role = role;
-                ws.send(JSON.stringify({
-                    type: 'LOGIN_SUCCESS',
-                    message: 'Logged in successfully'
-                }));*/
-
                 if(!data.email || !data.password){
                     ws.send(JSON.stringify({
                         type: 'ERROR',
@@ -82,7 +43,7 @@ async function handleMessage(ws, message){
                     break;
                 }
 
-                const user = response.data.user;
+                const user = response.data;
 
                 if(getClient(user.email)){
                     ws.send(JSON.stringify({
@@ -95,9 +56,9 @@ async function handleMessage(ws, message){
 
                 ws.username = user.email;
                 ws.role = user.type;
-                ws.apikey = response.data.apikey;
+                ws.apikey = user.apikey;
 
-                addClient(user.email, ws, user.type);
+                addClient(user.email, ws, user.type, user.apikey);
 
                 ws.send(JSON.stringify({
                     type: 'LOGIN_SUCCESS',
@@ -108,7 +69,7 @@ async function handleMessage(ws, message){
                 break;
 
                 case 'TRACK':                    
-                    if(data.flight_id === undefined || data.flight_id == null || typeof data.flight_id !== 'number'){
+                    if(data.flight_id === undefined || data.flight_id == null /*|| typeof data.flight_id !== 'number'*/){
                         ws.send(JSON.stringify({
                             type: 'ERROR',
                             message: 'Missing flight_id'
@@ -116,6 +77,7 @@ async function handleMessage(ws, message){
 
                         break;
                     }
+
                     if(!ws.username){
                         ws.send(JSON.stringify({
                             type: 'ERROR',
@@ -123,6 +85,33 @@ async function handleMessage(ws, message){
                         }));
 
                         break;
+                    }
+
+                    const flightIdNUM = Number(data.flight_id);
+                    if(!Number.isInteger(flightIdNUM)){
+                        ws.send(JSON.stringify({
+                            type: 'ERROR',
+                            message: 'Invalid flight_id'
+                        }));
+
+                        break;
+                    }
+
+                    if(ws.role !== 'ATC'){
+                        const flightCheck = await apiRequest({
+                            type: 'GetFlight',
+                            apikey: ws.apikey,
+                            flight_id: data.flight_id
+                        })
+
+                        if(flightCheck.status !== 'success'){
+                            ws.send(JSON.stringify({
+                                type: 'ERROR',
+                                message: 'Not allowed to track this flight'
+                            }));
+
+                            break;
+                        }
                     }
 
                     const clients = getSubscribers(data.flight_id);
@@ -144,6 +133,55 @@ async function handleMessage(ws, message){
 
                     break;
 
+                case 'DISPATCH':
+                    if(ws.role !== 'ATC'){
+                        ws.send(JSON.stringify({
+                            type: 'ERROR',
+                            message: 'Only ATC can dispatch flights'
+                        }));
+
+                        break;
+                    }
+
+                    const response = await apiRequest({
+                        type: 'DispatchFlight',
+                        apikey: ws.apikey,
+                        flight_id: data.flight_id
+                    });
+
+                    if(response.status !== 'success'){
+                        ws.send(JSON.stringify({
+                            type: 'ERROR',
+                            message: response.data
+                        }));
+
+                        break;
+                    }
+
+                    const flightResponse = await apiRequest({
+                        type: 'GetFlight',
+                        apikey: ws.apikey,
+                        flight_id: data.flight_id
+                    });
+
+                    if(flightResponse.status !== 'success'){
+                        ws.send(JSON.stringify({
+                            type: 'ERROR',
+                            message: 'Unable to retrieve flight'
+                        }));
+
+                        break;
+                    }
+
+                    startFlightTracking(flightResponse.data.flight);
+
+                    ws.send(JSON.stringify({
+                        type: 'DISPATCHED',
+                        message: data.flight_id
+                    }));
+
+                    break;
+
                 default:
                     ws.send(JSON.stringify({
                         type: 'ERROR',
@@ -156,8 +194,8 @@ async function handleMessage(ws, message){
         console.error(error);
         ws.send(JSON.stringify({
             type: 'ERROR',
-            message: 'Invalid JSON'
-        }))
+            message: error instanceof SyntaxError ? 'Invalid JSON' : 'Internal server error'
+        }));
     }
 }
 
