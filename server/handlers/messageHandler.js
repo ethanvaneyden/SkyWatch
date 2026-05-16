@@ -65,128 +65,127 @@ async function handleMessage(ws, message){
                     role: user.type,
                     message: 'Logged in successfully'
                 }));
-                
+
                 break;
 
-                case 'TRACK':                    
-                    if(data.flight_id === undefined || data.flight_id == null /*|| typeof data.flight_id !== 'number'*/){
-                        ws.send(JSON.stringify({
-                            type: 'ERROR',
-                            message: 'Missing flight_id'
-                        }));
-
-                        break;
-                    }
-
-                    if(!ws.username){
-                        ws.send(JSON.stringify({
-                            type: 'ERROR',
-                            message: 'Please login first'
-                        }));
-
-                        break;
-                    }
-
-                    const flightIdNUM = Number(data.flight_id);
-                    if(!Number.isInteger(flightIdNUM)){
-                        ws.send(JSON.stringify({
-                            type: 'ERROR',
-                            message: 'Invalid flight_id'
-                        }));
-
-                        break;
-                    }
-
-                    if(ws.role !== 'ATC'){
-                        const flightCheck = await apiRequest({
-                            type: 'GetFlight',
-                            apikey: ws.apikey,
-                            flight_id: data.flight_id
-                        })
-
-                        if(flightCheck.status !== 'success'){
-                            ws.send(JSON.stringify({
-                                type: 'ERROR',
-                                message: 'Not allowed to track this flight'
-                            }));
-
-                            break;
-                        }
-                    }
-
-                    const clients = getSubscribers(data.flight_id);
-                
-                    if(clients.has(ws)){
-                        ws.send(JSON.stringify({
-                            type: 'ERROR',
-                            message: `${ws.username} already subscribed to flight ${data.flight_id}`
-                        }));
-
-                        break;
-                    }
-                    
-                    subscribe(data.flight_id, ws);
+            case 'TRACK':    
+                if(data.flight_id === undefined || data.flight_id == null /*|| typeof data.flight_id !== 'number'*/){
                     ws.send(JSON.stringify({
-                        type: 'TRACKING',
-                        message: `${ws.username} subscribed to flight ${data.flight_id}`
+                        type: 'ERROR',
+                        message: 'Missing flight_id'
                     }));
 
                     break;
+                }
 
-                case 'DISPATCH':
-                    if(ws.role !== 'ATC'){
-                        ws.send(JSON.stringify({
-                            type: 'ERROR',
-                            message: 'Only ATC can dispatch flights'
-                        }));
+                if(!ws.username){
+                    ws.send(JSON.stringify({
+                        type: 'ERROR',
+                        message: 'Please login first'
+                    }));
 
-                        break;
-                    }
+                    break;
+                }
 
-                    const response = await apiRequest({
-                        type: 'DispatchFlight',
-                        apikey: ws.apikey,
-                        flight_id: data.flight_id
-                    });
+                const flightIdNUM = Number(data.flight_id);
+                if(!Number.isInteger(flightIdNUM)){
+                    ws.send(JSON.stringify({
+                        type: 'ERROR',
+                        message: 'Invalid flight_id'
+                    }));
 
-                    if(response.status !== 'success'){
-                        ws.send(JSON.stringify({
-                            type: 'ERROR',
-                            message: response.data
-                        }));
+                    break;
+                }
 
-                        break;
-                    }
-
-                    const flightResponse = await apiRequest({
+                if(ws.role !== 'ATC'){
+                    const flightCheck = await apiRequest({
                         type: 'GetFlight',
                         apikey: ws.apikey,
                         flight_id: data.flight_id
-                    });
+                    })
 
-                    if(flightResponse.status !== 'success'){
+                    if(flightCheck.status !== 'success'){
                         ws.send(JSON.stringify({
                             type: 'ERROR',
-                            message: 'Unable to retrieve flight'
+                            message: 'Not allowed to track this flight'
                         }));
 
                         break;
                     }
+                }
 
-                    startFlightTracking(flightResponse.data.flight);
-
+                const clients = getSubscribers(data.flight_id);
+                    
+                if(clients.has(ws)){
                     ws.send(JSON.stringify({
-                        type: 'DISPATCHED',
-                        message: data.flight_id
+                        type: 'ERROR',
+                        message: `${ws.username} already subscribed to flight ${data.flight_id}`
                     }));
 
                     break;
+                }
+    
+                subscribe(data.flight_id, ws);
+                ws.send(JSON.stringify({
+                    type: 'TRACKING',
+                    message: `${ws.username} subscribed to flight ${data.flight_id}`
+                }));
 
-                default:
+                break;
+
+            case 'DISPATCH':
+                if(ws.role !== 'ATC'){
                     ws.send(JSON.stringify({
                         type: 'ERROR',
-                        message: 'Unknown message type' 
+                        message: 'Only ATC can dispatch flights'
                     }));
+
+                    break;
+                }
+
+                response = await apiRequest({
+                    type: 'DispatchFlight',
+                    apikey: ws.apikey,
+                    flight_id: data.flight_id
+                });
+
+                if(response.status !== 'success'){
+                    ws.send(JSON.stringify({
+                        type: 'ERROR',
+                        message: response.data
+                    }));
+                    break;
+                }
+
+                const flightResponse = await apiRequest({
+                    type: 'GetFlight',
+                    apikey: ws.apikey,
+                    flight_id: data.flight_id
+                });
+
+                if(flightResponse.status !== 'success'){
+                    ws.send(JSON.stringify({
+                        type: 'ERROR',
+                        message: 'Unable to retrieve flight'
+                    }));
+
+                    break;
+                }
+
+                startFlightTracking(flightResponse.data.flight);
+
+                ws.send(JSON.stringify({
+                    type: 'DISPATCHED',
+                    message: data.flight_id
+                }));
+
+                break;
+
+            default:
+                ws.send(JSON.stringify({
+                    type: 'ERROR',
+                    message: 'Unknown message type' 
+                }));
 
         }
     }
