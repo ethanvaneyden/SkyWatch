@@ -1,4 +1,4 @@
-/* Global Professional Styles - Vibrant Light & Sexy Red Edition */
+
 :root {
   --primary-color: #0f172a;
   --secondary-color: #475569;
@@ -72,7 +72,7 @@ body, html {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-image: linear-gradient(rgba(225, 29, 72, 0.03) 1px, transparent 1px), 
+  background-image: linear-gradient(rgba(225, 29, 72, 0.03) 1px, transparent 1px),
                     linear-gradient(90deg, rgba(225, 29, 72, 0.03) 1px, transparent 1px);
   background-size: 50px 50px;
   pointer-events: none;
