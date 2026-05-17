@@ -148,9 +148,7 @@ The client will be available at:
 
 ```
 http://localhost:4200
-```
-
-> The client runs entirely on localhost. Do **not** host it on Wheatley.
+``` 
 
 ---
 
