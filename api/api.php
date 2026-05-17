@@ -173,7 +173,7 @@ class LuminaAPI
             $this->sendResponse("error", "Missing internal key.", 400);
         }
 
-        if (INTERNAL_API_KEY !== $this->requestData['secret_key']) {
+        if (INTERNAL_API_KEY !== $this->requestData['internal_key']) {
             $this->sendResponse("error", "The API key is invalid.", 401);
         }
 
@@ -1409,6 +1409,7 @@ class FlightsService
         u.id as passenger_id,
         u.name,
         u.surname,
+        u.email,
         pf.seat_number,
         pf.boarding_confirmed,
         pf.confirmed_at
