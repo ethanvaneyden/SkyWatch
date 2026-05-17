@@ -138,8 +138,8 @@ async function handleMessage(ws, message){
                     break;
                 }
 
-                const flightIdNUM = Number(data.flight_id);
-                if(!Number.isInteger(flightIdNUM)){
+                const flightId = Number(data.flight_id);
+                if(!Number.isInteger(flightId)){
                     safeSend(ws, {
                         type: 'ERROR',
                         message: 'Invalid flight_id'
@@ -151,7 +151,7 @@ async function handleMessage(ws, message){
                     const flightCheck = await apiRequest({
                         type: 'GetFlight',
                         apikey: ws.apikey,
-                        flight_id: data.flight_id
+                        flight_id: flightId
                     })
 
                     if(flightCheck.status !== 'success'){
@@ -164,22 +164,22 @@ async function handleMessage(ws, message){
                     }
                 }
 
-                const clients = getSubscribers(data.flight_id);
+                const clients = getSubscribers(flightId);
                     
                 if(clients.has(ws)){
                     safeSend(ws, {
                         type: 'ERROR',
-                        message: `${ws.username} already subscribed to flight ${data.flight_id}`
+                        message: `${ws.username} already subscribed to flight ${flightId}`
                     });
 
                     break;
                 }
     
-                subscribe(data.flight_id, ws);
+                subscribe(flightId, ws);
 
                 safeSend(ws, {
                     type: 'TRACKING',
-                    message: `${ws.username} subscribed to flight ${data.flight_id}`
+                    message: `${ws.username} subscribed to flight ${flightId}`
                 });
 
                 break;
@@ -194,10 +194,19 @@ async function handleMessage(ws, message){
                     break;
                 }
 
+                const dispatchFlightId = Number(data.flight_id);
+                if(!Number.isInteger(dispatchFlightId)){
+                    safeSend(ws, {
+                        type: 'ERROR',
+                        message: 'Invalid flight_id'
+                    });
+                    break;
+                }
+
                 const dispatchResponse = await apiRequest({
                     type: 'DispatchFlight',
                     apikey: ws.apikey,
-                    flight_id: data.flight_id
+                    flight_id: dispatchFlightId
                 });
 
                 if(dispatchResponse.status !== 'success'){
@@ -211,7 +220,7 @@ async function handleMessage(ws, message){
                 const flightResponse = await apiRequest({
                     type: 'GetFlight',
                     apikey: ws.apikey,
-                    flight_id: data.flight_id
+                    flight_id: dispatchFlightId
                 });
 
                 if(flightResponse.status !== 'success'){
@@ -269,7 +278,7 @@ async function handleMessage(ws, message){
                     if(passengerClient){
                         passengerClient.socket.send(JSON.stringify({
                             type: 'BOARDING_CALL',
-                            flight_id: data.flight_id,
+                            flight_id: dispatchFlightId,
                             expires_in: 60,
                             message: 'Your flight is boarding'
                         }));
@@ -278,10 +287,10 @@ async function handleMessage(ws, message){
 
                 safeSend(ws, {
                     type: 'DISPATCHED',
-                    message: data.flight_id
+                    message: dispatchFlightId
                 });
 
-                startBoardingWindow(data.flight_id, 60,
+                startBoardingWindow(dispatchFlightId, 60,
                     async(flightId) => {
                         const refreshed = await apiRequest({
                             type: 'GetFlight',
@@ -323,7 +332,16 @@ async function handleMessage(ws, message){
                     break;
                 }
 
-                if(!isBoardingOpen(data.flight_id)){
+                const boardFlightId = Number(data.flight_id);
+                if(!Number.isInteger(boardFlightId)){
+                    safeSend(ws, {
+                        type: 'ERROR',
+                        message: 'Invalid flight_id'
+                    });
+                    break;
+                }
+
+                if(!isBoardingOpen(boardFlightId)){
                     safeSend(ws, {
                         type: 'ERROR',
                         message: 'Boarding window expired'
@@ -335,7 +353,7 @@ async function handleMessage(ws, message){
                 const boardResponse = await apiRequest({
                     type: 'BoardFlight',
                     apikey: ws.apikey,
-                    flight_id: data.flight_id
+                    flight_id: boardFlightId
                 });
 
                 if(boardResponse.status !== 'success'){
