@@ -7,12 +7,9 @@
 
 ## 👥 Group Members
 
-| Name | Surname | Student Number |
-|------|---------|---------------|
-|      |         |               |
-|      |         |               |
-|      |         |               |
-
+Funeko
+Lesego
+Ethan
 ---
 
 ## 📋 Table of Contents
