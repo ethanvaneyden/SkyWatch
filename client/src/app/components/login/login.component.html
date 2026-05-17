@@ -1,52 +1,65 @@
 <div class="login-container">
   <div class="login-card">
-    <h2>✈️ SKYWATCH</h2>
-    <p>Login to track your flights</p>
-    
+    <button (click)="toggleTheme()" class="btn-theme-login" [title]="'Switch to ' + (themeService.currentTheme() === 'light' ? 'Dark' : 'Light') + ' Mode'">
+      {{ themeService.currentTheme() === 'light' ? '🌙' : '☀️' }}
+    </button>
+    <div class="logo-container">
+         @if (themeService.currentTheme() === 'light')
+         {
+             <img src="assets/Photos/Logo.png" alt="Skywatch Logo" class="brand-logo">
+         }
+         @else {
+             <img src="assets/Photos/Logo white.png" alt="Skywatch Logo" class="brand-logo">
+  }
+
+    </div>
+    <h2>SKYWATCH</h2>
+    <p class="subtitle">Real-time flight tracking system</p>
+
     <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
       <div class="form-group">
-        <label for="email">Email</label>
-        <input 
-          type="email" 
-          id="email" 
-          name="email" 
-          [(ngModel)]="credentials.email" 
-          required 
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="credentials.email"
+          required
           #email="ngModel"
           class="form-control"
-          placeholder="Enter your email"
+          placeholder="name&#64;example.com"
         >
       </div>
-      
+
       <div class="form-group">
         <label for="password">Password</label>
-        <input 
-          type="password" 
-          id="password" 
-          name="password" 
-          [(ngModel)]="credentials.password" 
-          required 
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="credentials.password"
+          required
           #password="ngModel"
           class="form-control"
-          placeholder="Enter your password"
+          placeholder="••••••••"
         >
       </div>
-      
+
       <div *ngIf="error" class="error-message">
         {{ error }}
       </div>
-      
+
       <button type="submit" [disabled]="!loginForm.form.valid || loading" class="btn-login">
-        {{ loading ? 'Logging in...' : 'Login' }}
+        {{ loading ? 'Authenticating...' : 'Sign In' }}
       </button>
     </form>
-    
+
     <div class="register-link">
-      Don't have an account? <a routerLink="/register">Register here</a>
+      New to Skywatch? <a routerLink="/register">Create an account</a>
     </div>
 
     <div class="test-accounts">
-      <p>Test Accounts (password: password123):</p>
+      <p>Quick Access (password: password123):</p>
       <code>atc&#64;skywatch.com</code> | <code>passenger&#64;skywatch.com</code>
     </div>
   </div>

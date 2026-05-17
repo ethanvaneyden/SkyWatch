@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-login',
@@ -19,8 +20,13 @@ export class LoginComponent {
   error: string | null = null;
   loading = false;
 
-  private authService = inject(AuthService);
-  private router = inject(Router);
+  authService = inject(AuthService);
+  router = inject(Router);
+  themeService = inject(ThemeService);
+
+  toggleTheme() {
+    this.themeService.toggleTheme();
+  }
 
   onSubmit() {
     this.loading = true;

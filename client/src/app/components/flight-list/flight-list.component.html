@@ -1,26 +1,44 @@
 <div class="flight-list-container">
-  <h3>{{ user()?.user_type === 'ATC' ? 'All Flights' : 'My Booked Flights' }}</h3>
+  <div class="sidebar-header">
+    <h3>{{ user()?.user_type === 'ATC' ? 'Global Fleet' : 'Your Itinerary' }}</h3>
+    <button (click)="loadFlights()" class="refresh-btn">Refresh</button>
+  </div>
   
-  <div *ngIf="loading()" class="loading">Loading flights...</div>
+  <div *ngIf="loading()" class="loading">
+    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+    <span class="ms-2">Syncing flights...</span>
+  </div>
   
   <div *ngIf="!loading() && flights().length === 0" class="no-flights">
-    No flights found.
+    <p>No active flight schedules found.</p>
   </div>
 
   <div class="flights-grid">
-    <div *ngFor="let flight of flights()" class="flight-card" [class]="flight.status.toLowerCase().replace(' ', '-')">
+    <div *ngFor="let flight of flights()" 
+         class="flight-card" 
+         [class]="flight.status.toLowerCase().replace(' ', '-')">
+      <div class="status-bar"></div>
+      
       <div class="flight-header">
         <span class="flight-number">{{ flight.flight_number }}</span>
-        <span class="flight-status">{{ flight.status }}</span>
+        <span class="status-pill">{{ flight.status }}</span>
       </div>
       
-      <div class="flight-details">
-        <div class="route">
-          <span class="airport">{{ flight.origin_code }}</span>
-          <span class="arrow">✈️</span>
-          <span class="airport">{{ flight.destination_code }}</span>
+      <div class="route-container">
+        <div class="airport-info">
+          <span class="airport-code">{{ flight.origin_code }}</span>
+          <span class="airport-name">Origin</span>
         </div>
-        <div class="time">Duration: {{ flight.flight_duration_hours }}h</div>
+        <div class="route-line"></div>
+        <div class="airport-info" style="text-align: right;">
+          <span class="airport-code">{{ flight.destination_code }}</span>
+          <span class="airport-name">Destination</span>
+        </div>
+      </div>
+
+      <div class="flight-meta">
+        <span>⏱️ {{ flight.flight_duration_hours }}h duration</span>
+        <span *ngIf="flight.progress">📍 {{ flight.progress.toFixed(0) }}% progress</span>
       </div>
 
       <div class="flight-actions">
@@ -28,7 +46,7 @@
         <button 
           *ngIf="user()?.user_type === 'ATC' && flight.status === 'Scheduled'" 
           (click)="dispatchFlight(flight.flight_id)"
-          class="btn-dispatch"
+          class="btn btn-dispatch"
         >
           Dispatch
         </button>
@@ -36,7 +54,7 @@
         <button 
           *ngIf="user()?.user_type === 'ATC'" 
           (click)="trackFlight(flight.flight_id)"
-          class="btn-track"
+          class="btn btn-track"
         >
           Track
         </button>
@@ -45,15 +63,15 @@
         <button 
           *ngIf="user()?.user_type === 'Passenger' && flight.status === 'Boarding'" 
           (click)="boardFlight(flight.flight_id)"
-          class="btn-board"
+          class="btn btn-board"
         >
-          Confirm Boarding
+          Board
         </button>
         
         <button 
           *ngIf="user()?.user_type === 'Passenger'" 
           (click)="trackFlight(flight.flight_id)"
-          class="btn-track"
+          class="btn btn-track"
         >
           Track
         </button>

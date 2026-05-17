@@ -3,34 +3,85 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  padding: 20px 0;
+  background: var(--bg-main);
+  position: relative;
+  overflow: hidden;
+  padding: 2rem 0;
+  transition: background-color 0.3s ease;
+}
+
+.register-container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: linear-gradient(rgba(225, 29, 72, 0.05) 1px, transparent 1px), 
+                    linear-gradient(90deg, rgba(225, 29, 72, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
 }
 
 .register-card {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  background: var(--bg-card);
+  padding: 3.5rem;
+  border-radius: 1.5rem;
+  box-shadow: var(--card-shadow);
   width: 100%;
-  max-width: 500px;
+  max-width: 520px;
   text-align: center;
+  z-index: 10;
+  border: 1px solid var(--border-color);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.btn-theme-register {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.btn-theme-register:hover {
+  transform: rotate(15deg);
+  border-color: var(--accent-color);
+}
+
+.register-card::after {
+  content: "";
+  position: absolute;
+  top: -1px; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
 }
 
 h2 {
-  color: #1e3c72;
+  color: var(--text-main);
   margin-bottom: 0.5rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
 }
 
-p {
-  color: #666;
-  margin-bottom: 2rem;
+p.subtitle {
+  color: var(--text-muted);
+  margin-bottom: 3rem;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .form-row {
   display: flex;
-  gap: 15px;
+  gap: 1.25rem;
 }
 
 .form-group {
@@ -42,73 +93,112 @@ p {
 label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #333;
+  color: var(--secondary-color);
   font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .form-control {
   width: 100%;
-  padding: 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
   box-sizing: border-box;
   font-size: 1rem;
+  transition: all 0.2s;
+  background: var(--input-bg);
+  color: var(--text-main);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.15);
+  background: var(--bg-card);
 }
 
 .radio-group {
   display: flex;
-  gap: 20px;
+  gap: 1.5rem;
   margin-top: 0.5rem;
+  background: var(--input-bg);
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
 }
 
 .radio-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   cursor: pointer;
-  font-weight: normal;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+  color: var(--text-muted);
+}
+
+.radio-label:hover {
+  color: var(--text-main);
+}
+
+input[type="radio"] {
+  accent-color: var(--accent-color);
 }
 
 .btn-register {
   width: 100%;
   padding: 1rem;
-  background: #1e3c72;
+  background: var(--accent-color);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 600;
+  border-radius: 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 800;
   cursor: pointer;
-  transition: background 0.3s;
-  margin-top: 1rem;
+  transition: all 0.3s;
+  margin-top: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
-.btn-register:hover {
-  background: #2a5298;
+.btn-register:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px -5px rgba(225, 29, 72, 0.5);
 }
 
 .btn-register:disabled {
-  background: #ccc;
+  background: var(--border-color);
+  color: var(--text-muted);
   cursor: not-allowed;
 }
 
 .error-message {
-  color: #d32f2f;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  background: #ffebee;
-  padding: 0.5rem;
-  border-radius: 4px;
+  color: var(--accent-color);
+  margin-bottom: 1.5rem;
+  font-size: 0.8125rem;
+  background: rgba(225, 29, 72, 0.1);
+  padding: 0.875rem;
+  border-radius: 0.75rem;
 }
 
 .login-link {
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
-  color: #666;
+  margin-top: 2.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 
 .login-link a {
-  color: #1e3c72;
+  color: var(--accent-color);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 800;
+  margin-left: 0.5rem;
 }
+
