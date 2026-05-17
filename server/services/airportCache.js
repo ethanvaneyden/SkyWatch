@@ -19,4 +19,8 @@ function getAirport(id){
     return airports.find(a => a.id == id);
 }
 
-module.exports = { loadAirports, getAirport };
+function getAllAirports() {
+    return airports;
+}
+
+module.exports = { loadAirports, getAirport, getAllAirports };

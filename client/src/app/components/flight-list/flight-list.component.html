@@ -1,0 +1,81 @@
+<div class="flight-list-container">
+  <div class="sidebar-header">
+    <h3>{{ user()?.user_type === 'ATC' ? 'Global Fleet' : 'Your Itinerary' }}</h3>
+    <button (click)="loadFlights()" class="refresh-btn">Refresh</button>
+  </div>
+  
+  <div *ngIf="loading()" class="loading">
+    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+    <span class="ms-2">Syncing flights...</span>
+  </div>
+  
+  <div *ngIf="!loading() && flights().length === 0" class="no-flights">
+    <p>No active flight schedules found.</p>
+  </div>
+
+  <div class="flights-grid">
+    <div *ngFor="let flight of flights()" 
+         class="flight-card" 
+         [class]="flight.status.toLowerCase().replace(' ', '-')">
+      <div class="status-bar"></div>
+      
+      <div class="flight-header">
+        <span class="flight-number">{{ flight.flight_number }}</span>
+        <span class="status-pill">{{ flight.status }}</span>
+      </div>
+      
+      <div class="route-container">
+        <div class="airport-info">
+          <span class="airport-code">{{ flight.origin_code }}</span>
+          <span class="airport-name">Origin</span>
+        </div>
+        <div class="route-line"></div>
+        <div class="airport-info" style="text-align: right;">
+          <span class="airport-code">{{ flight.destination_code }}</span>
+          <span class="airport-name">Destination</span>
+        </div>
+      </div>
+
+      <div class="flight-meta">
+        <span>⏱️ {{ flight.flight_duration_hours }}h duration</span>
+        <span *ngIf="flight.progress">📍 {{ flight.progress.toFixed(0) }}% progress</span>
+      </div>
+
+      <div class="flight-actions">
+        <!-- ATC Actions -->
+        <button 
+          *ngIf="user()?.user_type === 'ATC' && flight.status === 'Scheduled'" 
+          (click)="dispatchFlight(flight.flight_id)"
+          class="btn btn-dispatch"
+        >
+          Dispatch
+        </button>
+        
+        <button 
+          *ngIf="user()?.user_type === 'ATC'" 
+          (click)="trackFlight(flight.flight_id)"
+          class="btn btn-track"
+        >
+          Track
+        </button>
+
+        <!-- Passenger Actions -->
+        <button 
+          *ngIf="user()?.user_type === 'Passenger' && flight.status === 'Boarding'" 
+          (click)="boardFlight(flight.flight_id)"
+          class="btn btn-board"
+        >
+          Board
+        </button>
+        
+        <button 
+          *ngIf="user()?.user_type === 'Passenger'" 
+          (click)="trackFlight(flight.flight_id)"
+          class="btn btn-track"
+        >
+          Track
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

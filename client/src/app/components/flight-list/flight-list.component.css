@@ -1,0 +1,198 @@
+.flight-list-container {
+  padding: 2rem;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.refresh-btn {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.refresh-btn:hover {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
+.loading, .no-flights {
+  text-align: center;
+  padding: 5rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.flights-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.flight-card {
+  background: var(--bg-card);
+  border-radius: 1.5rem;
+  padding: 1.75rem;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.flight-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent-color);
+}
+
+.status-bar {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 6px;
+  background: var(--border-color);
+}
+
+.flight-card.scheduled .status-bar { background: var(--accent-color); }
+.flight-card.boarding .status-bar { background: var(--warning-color); }
+.flight-card.in-flight .status-bar { background: var(--success-color); }
+.flight-card.landed .status-bar { background: var(--text-muted); }
+
+.flight-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.flight-number {
+  font-weight: 900;
+  font-size: 1.25rem;
+  color: var(--text-main);
+}
+
+.status-pill {
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.scheduled .status-pill { background: rgba(225, 29, 72, 0.1); color: var(--accent-color); }
+.boarding .status-pill { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); animation: pulse 2s infinite; }
+.in-flight .status-pill { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+.landed .status-pill { background: var(--bg-main); color: var(--text-muted); }
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.route-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  background: var(--bg-main);
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+}
+
+.airport-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.airport-code {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--text-main);
+}
+
+.airport-name {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.route-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border-color);
+  margin: 0 1.5rem;
+  position: relative;
+}
+
+.route-line::after {
+  content: "✈️";
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1rem;
+}
+
+.flight-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 1.75rem;
+}
+
+.flight-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn {
+  flex: 1;
+  padding: 0.875rem;
+  border: none;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+}
+
+.btn-dispatch { background: var(--accent-color); color: white; }
+.btn-dispatch:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(225, 29, 72, 0.3); }
+
+.btn-track { background: var(--bg-main); color: var(--text-main); border: 2px solid var(--border-color); }
+.btn-track:hover { background: var(--bg-card); border-color: var(--accent-color); color: var(--accent-color); }
+
+.btn-board { background: var(--success-color); color: white; }
+.btn-board:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); }
+

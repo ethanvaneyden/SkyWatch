@@ -1,0 +1,34 @@
+<div class="dashboard">
+  <nav class="navbar">
+    <div class="nav-brand">
+      <img src="assets/Photos/Logo white.png" alt="Logo" class="nav-logo">
+      <span>SKYWATCH</span>
+    </div>
+    <div class="nav-user">
+      <div class="ws-status" [class.connected]="wsService.isConnected()">
+        <span class="status-dot"></span>
+        {{ wsService.isConnected() ? 'System Online' : 'System Offline' }}
+      </div>
+
+      <div class="user-badge">
+        <span class="role-tag">{{ user()?.user_type }}</span>
+        <span class="user-name">{{ user()?.name }} {{ user()?.surname }}</span>
+      </div>
+
+      <button (click)="toggleTheme()" class="btn-theme" [title]="'Switch to ' + (themeService.currentTheme() === 'light' ? 'Dark' : 'Light') + ' Mode'">
+        {{ themeService.currentTheme() === 'light' ? '🌙' : '☀️' }}
+      </button>
+
+      <button (click)="logout()" class="btn-logout">Sign Out</button>
+    </div>
+  </nav>
+
+  <main class="content">
+    <aside class="sidebar">
+      <app-flight-list></app-flight-list>
+    </aside>
+    <section class="map-area">
+      <app-map></app-map>
+    </section>
+  </main>
+</div>
