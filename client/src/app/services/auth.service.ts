@@ -50,9 +50,6 @@ export class AuthService {
           const user: User = {
             ...credentials,
             apikey: response.data.apikey,
-            // These would normally come from the API, but for now we take them from the login attempt if possible
-            // or we might need another GetUser info call.
-            // The API docs say Login only returns apikey.
           };
           this.saveUser(user);
         }
