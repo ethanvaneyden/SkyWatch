@@ -8,11 +8,29 @@ function subscribe(flightId, ws){
         subscriptions.set(flightId, new Set());
     }
 
+    if (subscriptions.get(flightId)?.has(ws)){
+        console.log(`${ws.username} is already subscribed to flight ${flightId}`);
+        return;
+    }
+    
     subscriptions.get(flightId).add(ws);
     console.log(`${ws.username} subscribed to flight ${flightId}`);
 }
 
-function unsubscribe(ws){
+function unsubscribe(ws, flightId = null){
+    //remove from one flight only
+    if(flightId){
+        const subs = subscriptions.get(flightId);
+        if(subs){
+            subs.delete(ws);
+            if(subs.size === 0){
+                subscriptions.delete(flightId);
+            }
+        }
+        return;
+    }
+
+    //remove from all flights
     subscriptions.forEach((clients, flightId) => {
         if(clients.has(ws)){
             clients.delete(ws);

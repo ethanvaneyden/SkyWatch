@@ -2,8 +2,8 @@
 //clientManager.js
 const client = new Map() //Storing connected clients
 
-function addClient(username, socket, role){
-    client.set(username.toLowerCase(), {socket, role});
+function addClient(username, socket, role, apiKey){
+    client.set(username.toLowerCase(), {socket, role, apiKey});
     console.log(`${username.toLowerCase()} connected as ${role}`);
 }
 
@@ -14,7 +14,6 @@ function removeClient(username){
 
 function getClient(username){
     return client.get(username.toLowerCase());
-    //clie
 }
 
 function getAllClients(){
