@@ -5,6 +5,14 @@ const axios = require('axios');
 const API_URL = process.env.API_URL;
 
 async function apiRequest(body){
+    if(!API_URL){
+        return {
+            status: 'error',
+            data: 'API_URL is not configured',
+            responseCode: 500
+        };
+    }
+
     try{
         const response = await axios.post(API_URL, body, {
             headers: {

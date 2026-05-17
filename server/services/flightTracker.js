@@ -10,6 +10,18 @@ function startFlightTracking(flight){
     if(activeFlights.has(flight.flight_id)){
         return false;
     }
+
+    const internalKey = process.env.INTERNAL_API_KEY;
+    if(!internalKey){
+        console.error('INTERNAL_API_KEY is not configured. Cannot start flight tracking.');
+        return false;
+    }
+
+    if(!flight.flight_duration_hours || Number(flight.flight_duration_hours) <= 0){
+        console.warn('Invalid or missing flight_duration_hours. Defaulting to 1 hour.');
+        flight.flight_duration_hours = 1;
+    }
+
     let started = false;
 
     const movement = new FlightMovement(flight, 

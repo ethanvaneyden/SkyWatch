@@ -372,7 +372,7 @@ async function handleMessage(ws, message){
                     break;
                 }
                 const allFlightsResponse = await apiRequest({
-                    type: 'GetFlights',
+                    type: 'GetAllFlights',
                     apikey: ws.apikey
                 });
                 safeSend(ws, {
@@ -383,11 +383,9 @@ async function handleMessage(ws, message){
 
             case 'GET_MY_FLIGHTS':
                 const myFlightsResponse = await apiRequest({
-                    type: 'GetFlights',
+                    type: 'GetAllFlights',
                     apikey: ws.apikey
                 });
-                // Assuming the API returns all flights and we need to filter if it's a passenger
-                // Or maybe Task 1's GetFlights already filters by apikey for passengers.
                 safeSend(ws, {
                     type: 'FLIGHT_LIST',
                     flights: myFlightsResponse.status === 'success' ? myFlightsResponse.data : []

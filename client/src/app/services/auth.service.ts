@@ -48,7 +48,10 @@ export class AuthService {
       tap(response => {
         if (response.status === 'success') {
           const user: User = {
-            ...credentials,
+            name: response.data.name || '',
+            surname: response.data.surname || '',
+            email: response.data.email || credentials.email,
+            user_type: response.data.role === 'ATC' ? 'ATC' : 'Passenger',
             apikey: response.data.apikey,
           };
           this.saveUser(user);

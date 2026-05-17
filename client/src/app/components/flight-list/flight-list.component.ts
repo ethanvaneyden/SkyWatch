@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './flight-list.component.html',
-  styleUrl: './flight-list.component.css'
+  styleUrls: ['./flight-list.component.css']
 })
 export class FlightListComponent implements OnInit {
   private ws = inject(WebsocketService);

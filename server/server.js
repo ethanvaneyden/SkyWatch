@@ -25,7 +25,12 @@ if(!PORT || PORT < 1024 || PORT > 49151){ //port validation
     await loadAirports();
 })();
 
-const wss = new WebSocket.Server({port: PORT}); //WebSocket server creation
+const wss = new WebSocket.Server({port: Number(PORT)}); //WebSocket server creation
+wss.on('error', (error) => {
+    console.error(`Failed to start WebSocket server on port ${PORT}:`, error.message);
+    process.exit(1);
+});
+
 console.log(`WebSocket server running on port ${PORT}`);
 
 //const clients = new Map(); //Storing connected clients

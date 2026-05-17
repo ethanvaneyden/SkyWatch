@@ -10,7 +10,7 @@ import { ThemeService } from '../../services/theme.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.css'
+  styleUrls: ['./register.component.css']
 })
 export class RegisterComponent {
   userData = {

@@ -8,7 +8,7 @@ import { WebsocketService } from '../../services/websocket.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './map.component.html',
-  styleUrl: './map.component.css'
+  styleUrls: ['./map.component.css']
 })
 export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   private ws = inject(WebsocketService);
@@ -59,14 +59,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.airportMarkers = [];
 
     const airportIcon = L.icon({
-      iconUrl: 'assets/airport-marker.png', // Make sure this exists or use a default
+      iconUrl: 'assets/airport-marker.svg',
       iconSize: [25, 25],
       iconAnchor: [12, 12]
     });
 
     airports.forEach(ap => {
       const marker = L.marker([ap.latitude, ap.longitude], {
-        title: `${ap.name} (${ap.code})`
+        title: `${ap.name} (${ap.code})`,
+        icon: airportIcon
       }).addTo(this.map);
       marker.bindPopup(`<b>${ap.name}</b><br>${ap.city}, ${ap.country}`);
       this.airportMarkers.push(marker);
@@ -85,7 +86,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     let marker = this.aircraftMarkers.get(data.flight_id);
     
     const aircraftIcon = L.icon({
-      iconUrl: 'assets/plane-marker.png', // Make sure this exists
+      iconUrl: 'assets/plane-marker.svg',
       iconSize: [30, 30],
       iconAnchor: [15, 15]
     });

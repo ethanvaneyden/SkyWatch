@@ -11,7 +11,7 @@ import { ThemeService } from '../../services/theme.service';
   standalone: true,
   imports: [CommonModule, FlightListComponent, MapComponent],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
+  styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent {
   authService = inject(AuthService);
