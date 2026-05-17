@@ -1,0 +1,72 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 2rem;
+  background: #1e3c72;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.user-info {
+  font-size: 0.9rem;
+}
+
+.ws-status {
+  font-size: 0.8rem;
+  color: #ff9800;
+}
+
+.ws-status.connected {
+  color: #4caf50;
+}
+
+.btn-logout {
+  padding: 0.4rem 0.8rem;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-logout:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 400px;
+  border-right: 1px solid #eee;
+  overflow-y: auto;
+  background: #f8f9fa;
+}
+
+.map-area {
+  flex: 1;
+  position: relative;
+}

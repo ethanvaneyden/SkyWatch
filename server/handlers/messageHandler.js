@@ -4,7 +4,7 @@ const {addClient, getClient, getAllClients} = require('../utils/clientManager');
 const {subscribe, getSubscribers} = require('../utils/subscriptionManager');
 const { apiRequest } = require('../services/apiService');
 const { startFlightTracking } = require('../services/flightTracker');
-const { getAirport } = require('../services/airportCache');
+const { getAirport, getAllAirports } = require('../services/airportCache');
 const { startBoardingWindow, isBoardingOpen } = require('../utils/boardingManager');
 const {safeSend} = require('../utils/socketUtils');
 
@@ -110,6 +110,10 @@ async function handleMessage(ws, message){
                 safeSend(ws, {
                     type: 'LOGIN_SUCCESS',
                     role: user.type,
+                    apikey: user.apikey,
+                    email: user.email,
+                    name: user.name,
+                    surname: user.surname,
                     message: 'Logged in successfully'
                 });
 
@@ -360,6 +364,41 @@ async function handleMessage(ws, message){
                     }
                 });
 
+                break;
+
+            case 'GET_ALL_FLIGHTS':
+                if (ws.role !== 'ATC') {
+                    safeSend(ws, { type: 'ERROR', message: 'Unauthorized' });
+                    break;
+                }
+                const allFlightsResponse = await apiRequest({
+                    type: 'GetFlights',
+                    apikey: ws.apikey
+                });
+                safeSend(ws, {
+                    type: 'FLIGHT_LIST',
+                    flights: allFlightsResponse.status === 'success' ? allFlightsResponse.data : []
+                });
+                break;
+
+            case 'GET_MY_FLIGHTS':
+                const myFlightsResponse = await apiRequest({
+                    type: 'GetFlights',
+                    apikey: ws.apikey
+                });
+                // Assuming the API returns all flights and we need to filter if it's a passenger
+                // Or maybe Task 1's GetFlights already filters by apikey for passengers.
+                safeSend(ws, {
+                    type: 'FLIGHT_LIST',
+                    flights: myFlightsResponse.status === 'success' ? myFlightsResponse.data : []
+                });
+                break;
+
+            case 'GET_AIRPORTS':
+                safeSend(ws, {
+                    type: 'AIRPORT_LIST',
+                    airports: getAllAirports()
+                });
                 break;
 
             default:

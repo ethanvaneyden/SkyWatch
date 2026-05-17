@@ -1,0 +1,53 @@
+<div class="register-container">
+  <div class="register-card">
+    <h2>✈️ SKYWATCH</h2>
+    <p>Create an account to track flights</p>
+    
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" [(ngModel)]="userData.name" required class="form-control" placeholder="John">
+        </div>
+        <div class="form-group">
+          <label for="surname">Surname</label>
+          <input type="text" id="surname" name="surname" [(ngModel)]="userData.surname" required class="form-control" placeholder="Doe">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" [(ngModel)]="userData.email" required class="form-control" placeholder="john.doe@example.com">
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" [(ngModel)]="userData.password" required class="form-control" placeholder="Min 8 characters">
+      </div>
+
+      <div class="form-group">
+        <label>Account Type</label>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="user_type" value="Passenger" [(ngModel)]="userData.user_type"> Passenger
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="user_type" value="ATC" [(ngModel)]="userData.user_type"> ATC
+          </label>
+        </div>
+      </div>
+      
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+      
+      <button type="submit" [disabled]="!registerForm.form.valid || loading" class="btn-register">
+        {{ loading ? 'Creating Account...' : 'Register' }}
+      </button>
+    </form>
+    
+    <div class="login-link">
+      Already have an account? <a routerLink="/login">Login here</a>
+    </div>
+  </div>
+</div>

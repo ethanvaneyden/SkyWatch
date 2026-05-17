@@ -36,7 +36,8 @@
               "src/.htaccess"
             ],
             "styles": [
-              "src/styles.scss"
+              "node_modules/leaflet/dist/leaflet.css",
+              "src/styles.css"
             ],
             "scripts": []
           },
@@ -96,7 +97,8 @@
               "src/.htaccess"
             ],
             "styles": [
-              "src/styles.scss"
+              "node_modules/leaflet/dist/leaflet.css",
+              "src/styles.css"
             ],
             "scripts": []
           }

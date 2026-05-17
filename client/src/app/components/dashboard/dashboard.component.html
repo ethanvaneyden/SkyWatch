@@ -1,0 +1,23 @@
+<div class="dashboard">
+  <nav class="navbar">
+    <div class="nav-brand">✈️ SKYWATCH</div>
+    <div class="nav-user">
+      <span class="user-info">
+        {{ user()?.name }} {{ user()?.surname }} ({{ user()?.user_type }})
+      </span>
+      <span class="ws-status" [class.connected]="wsService.isConnected()">
+        {{ wsService.isConnected() ? '● Online' : '○ Offline' }}
+      </span>
+      <button (click)="logout()" class="btn-logout">Logout</button>
+    </div>
+  </nav>
+
+  <main class="content">
+    <div class="sidebar">
+      <app-flight-list></app-flight-list>
+    </div>
+    <div class="map-area">
+      <app-map></app-map>
+    </div>
+  </main>
+</div>
