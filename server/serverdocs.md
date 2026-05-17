@@ -1,76 +1,151 @@
-✈️ SkyWatch WebSocket System – Integration Guide (Node Client Server)
-On your terminal run:
+✈️SkyWatch WebSocket Flight Tracking System
+Integration & User Guide
+
+1. System Overview
+The SkyWatch WebSocket Server is a real-time flight simulation and communication layer built in Node.js that integrates with the SkyWatch PHP API.
+
+It enables:
+- Real-time flight movement simulation
+- Passenger boarding workflows
+- ATC flight dispatching
+- Live aircraft position broadcasting
+- Flight tracking subscriptions
+- Boarding confirmation handling
+- Estimated landing time calculations
+- Real-time event notifications
+- CLI-based server administration
+
+The WebSocket server acts as a bridge between:
+Component	Purpose
+- PHP API	Persistent data & authentication
+- Node WebSocket Server	Real-time simulation & messaging
+- Passengers	Receive flight updates
+- ATC Users	Dispatch and monitor flights
+
+2. Starting the Server
+Step 1 — Navigate to the server directory
 cd server
+
+Step 2 — Start the WebSocket server
 node server.js <port>
 
 Example:
 node server.js 8080
 
-Expected output on your terminal:
-WebSocket server running on port <port>
+Expected output:
+Loaded 2173 airports
+WebSocket server running on port 8080
 
-To test:
-Open in browser: https://piehost.com/websocket-tester
+3. Testing the WebSocket Server
+Recommended WebSocket tester:
+PieHost WebSocket Tester :  https://piehost.com/websocket-tester
 
-Base WebSocket URL
+Connection URL
+ws://localhost:8080
+Or:
 ws://<server-ip>:<port>
 
 Example:
-ws://localhost:8080
+ws://192.168.0.10:8080
 
-1. Overview
-The WebSocket server acts as a real-time flight simulation layer between clients and the SkyWatch PHP API.
+4. System Architecture
+ Core Components
+        File:	                      Responsibility:
+- server.js	                  WebSocket server & CLI
+- messageHandler.js	          Handles all incoming messages
+- flightTracker.js	          Flight simulation engine
+- flightMovement.js	          Position interpolation calculations
+- apiService.js	              PHP API communication
+- clientManager.js	          Connected client storage
+- subscriptionManager.js      Flight subscriber management
+- boardingManager.js	        Boarding window tracking
+- airportCache.js	            Airport coordinate cache
+- socketUtils.js	            Safe WebSocket sending
 
-It handles:
-- User authentication (via PHP API)
-- Flight dispatch events
-- Live flight tracking
-- Real-time broadcasting to subscribers
+5. Authentication System
+The WebSocket server does NOT authenticate users directly.
+Instead, it forwards authentication requests to the PHP API.
 
-2. Connection Lifecycle
-Step 1: Connect
+After successful login:
+user email is stored
+role is stored
+API key is stored
+socket is registered
 
-Client opens a WebSocket connection:
-const ws = new WebSocket("ws://localhost:8080");
+6. Default Test Accounts
+FOR TEAM-MEMBERS
 
-3. Message Format (IMPORTANT)
+7. WebSocket Message Format
+ALL messages MUST contain a type field.
 
-All messages MUST follow:
+General Format
 {
-  "type": "MESSAGE_TYPE",
-  "...additional fields"
+  "type": "MESSAGE_TYPE"
 }
 
-All type values are case-insensitive internally, but should be sent in uppercase for consistency.
+All message types are case-insensitive internally.
+But it is recommended that they are in uppercase for consistency
+Recommended convention: UPPERCASE
 
-4. Authentication
-4.1 LOGIN
+8. Connection Lifecycle
+Step 1 — Connect
+const ws = new WebSocket("ws://localhost:8080");
 
-Authenticate a user via PHP API and register them in the WebSocket system.
+Step 2 — Login
+Send LOGIN request.
 
+Step 3 — Perform Actions
+
+Examples:
+TRACK
+DISPATCH
+BOARD
+
+Step 4 — Receive Real-Time Events
+
+Examples:
+POSITION
+LANDED
+BOARDING_CALL
+PASSENGER_BOARDED
+
+9. LOGIN Message
+Authenticates a user via the PHP API.
 Request
 {
   "type": "LOGIN",
   "email": "john@example.com",
   "password": "StrongPass1!"
 }
-Response (Success)
+Success Response
 {
   "type": "LOGIN_SUCCESS",
-  "role": "ATC" | "PASSENGER",
+  "role": "ATC",
+  "message": "Logged in successfully"
+}
+
+OR
+
+{
+  "type": "LOGIN_SUCCESS",
+  "role": "Passenger",
   "message": "Logged in successfully"
 }
 
 Internal Behaviour
-Calls PHP API:
-type: Login
-Stores:
-- username (email)
-- role
-- apiKey
-- Registers client in clientManager
+The Node server calls:
+{
+  "type": "Login",
+  "email": "john@example.com",
+  "password": "StrongPass1!"
+}
 
-Errors
+Then stores:
+ws.username
+ws.role
+ws.apikey
+
+Possible Errors
 {
   "type": "ERROR",
   "message": "Email and password required"
@@ -80,10 +155,28 @@ Errors
   "message": "User already connected"
 }
 
-5. Flight Tracking System
-5.1 TRACK FLIGHT
+10. REGISTER Message
+Creates a new account through the PHP API.
 
-Subscribe to real-time updates for a flight.
+Request
+{
+  "type": "REGISTER",
+  "name": "John",
+  "surname": "Doe",
+  "email": "john@example.com",
+  "password": "StrongPass1!",
+  "user_type": "Passenger"
+}
+
+Success Response
+{
+  "type": "REGISTRATION_SUCCESS",
+  "apikey": "generated-api-key",
+  "message": "Registered successfully, logging you in..."
+}
+
+11. TRACK Flight
+Subscribes a user to real-time updates for a flight.
 
 Request
 {
@@ -97,18 +190,24 @@ Success Response
   "message": "user@example.com subscribed to flight 3"
 }
 
-Behaviour
-- Adds WebSocket client to subscription list
+Internal Behaviour
+The server:
+validates login
+validates flight access
+adds socket to subscriber list
+Passenger Restrictions
 
-Enables receiving:
-- position updates
-- progress updates
-- completion event
+Passengers may ONLY track flights they are booked on.
+ATC users may track ALL flights.
 
-Errors
+Possible Errors
 {
   "type": "ERROR",
   "message": "Missing flight_id"
+}
+{
+  "type": "ERROR",
+  "message": "Invalid flight_id"
 }
 {
   "type": "ERROR",
@@ -116,13 +215,11 @@ Errors
 }
 {
   "type": "ERROR",
-  "message": "Already subscribed"
+  "message": "already subscribed"
 }
 
-6. Flight Dispatch (ATC only)
-6.1 DISPATCH FLIGHT
-
-Triggers flight movement simulation.
+12. DISPATCH Flight (ATC ONLY)
+Starts the flight simulation engine.
 
 Request
 {
@@ -136,64 +233,196 @@ Success Response
   "message": 3
 }
 
-Behaviour Flow
-When dispatched:
-PHP API is called:
+13. Dispatch Workflow
+When DISPATCH is received:
+
+Step 1
+PHP API called:
 {
   "type": "DispatchFlight",
-  "apikey": "<ATC API KEY>",
+  "apikey": "<ATC_API_KEY>",
   "flight_id": 3
 }
 
-Flight is fetched:
+Updates flight status to:
+Boarding
+
+Step 2
+Flight details fetched:
 {
   "type": "GetFlight",
   "flight_id": 3
 }
 
-Node starts simulation:
+Step 3
+Airport coordinates loaded from cache:
+
+origin.latitude
+origin.longitude
+
+destination.latitude
+destination.longitude
+
+Step 4
+Flight movement simulation starts:
 startFlightTracking(flight)
 
-Server begins:
-- position updates every tick
-- broadcasts to subscribers
-- updates PHP API (UpdateFlightPosition)
+Step 5
+Passengers receive boarding notifications.
 
-Errors
+Step 6
+Subscribers receive live flight updates.
+
+14. Boarding System
+When a flight is dispatched:
+a boarding window opens
+passengers receive BOARDING_CALL
+passengers must confirm boarding before timeout
+BOARDING_CALL Message
+
+Sent automatically to booked passengers.
+{
+  "type": "BOARDING_CALL",
+  "flight_id": 3,
+  "expires_in": 60,
+  "message": "Your flight is boarding"
+}
+
+15. BOARD Flight
+Passengers confirm boarding.
+
+Request
+{
+  "type": "BOARD",
+  "flight_id": 3
+}
+
+Success Response
+{
+  "type": "BOARDING_CONFIRMED",
+  "flight_id": 3
+}
+
+Internal Behaviour
+The server:
+validates boarding window
+updates PHP API
+notifies ATC users
+
+ATC Notification
+{
+  "type": "PASSENGER_BOARDED",
+  "passenger": "user@example.com",
+  "flight_id": 3
+}
+
+Boarding Errors
 {
   "type": "ERROR",
-  "message": "Only ATC can dispatch flights"
+  "message": "Boarding window expired"
 }
 {
   "type": "ERROR",
-  "message": "Flight not scheduled"
+  "message": "Only passengers can board"
 }
 
-7. Real-Time Flight Updates
-7.1 FLIGHT_UPDATE (Broadcast)
+16. Real-Time Flight Updates
+POSITION Update
 
-Sent repeatedly during flight movement.
-
-Message
+Broadcast repeatedly during flight simulation.
 {
-  "type": "FLIGHT_UPDATE",
+  "type": "POSITION",
   "flight_id": 3,
   "latitude": -26.123,
   "longitude": 28.456,
   "progress": 0.42
 }
-7.2 FLIGHT_COMPLETE (Broadcast)
+Progress Meaning
+Value	Meaning
+0	Just departed
+0.5	Halfway
+1	Arrived
 
-Sent when flight reaches destination.
-
-Message
+17. Flight Landing Event
+When destination reached:
 {
-  "type": "FLIGHT_COMPLETE",
+  "type": "LANDED",
   "flight_id": 3
 }
 
-8. Internal API Communication
-The Node server communicates with PHP API using:
+18. Estimated Landing Time
+The simulation uses:
+N flight hours = N simulation seconds
+
+Examples:
+Real Flight Duration	- Simulation Duration
+2 hours	              - 2 seconds
+14 hours	            - 14 seconds
+
+The server calculates remaining time using:
+remaining = durationMs - elapsed
+
+Displayed in:
+FLIGHT_STATUS
+
+19. Flight Simulation Engine
+Flight movement is calculated using interpolation between:
+origin airport coordinates
+destination airport coordinates
+
+Updates occur every: 100ms
+
+Each update:
+recalculates latitude
+recalculates longitude
+updates flight progress
+syncs PHP API
+broadcasts to subscribers
+
+20. Airport Cache System
+At startup:
+loadAirports()
+loads ALL airports from the PHP API into memory.
+
+Purpose:
+reduce repeated API calls
+improve dispatch speed
+provide coordinate lookup
+
+Example output:
+Loaded 2173 airports
+
+21. Subscription System
+Tracks which clients are subscribed to flights.
+
+Internal structure:
+Map<
+  flightId,
+  Set<WebSocket>
+>
+
+Example:
+3 => { ws1, ws2, ws5 }
+
+22. Safe Socket Handling
+The system prevents crashes caused by dead sockets.
+
+Before sending:
+if(ws.readyState === 1)
+
+Safe sending handled by:
+safeSend()
+
+23. Automatic Cleanup
+On disconnect:
+The server automatically:
+- removes client
+- unsubscribes client
+- clears socket metadata
+- cleans flight subscriptions
+
+24. Internal API Communication
+Node communicates with PHP API using:
 
 apiRequest({
   type: "...",
@@ -201,8 +430,9 @@ apiRequest({
   internal_key: "..."
 })
 
-8.1 UpdateFlightPosition
-Request (internal only)
+25. Internal UpdateFlightPosition Request
+Used internally by the flight tracker.
+
 {
   "type": "UpdateFlightPosition",
   "internal_key": "<SECRET>",
@@ -212,105 +442,125 @@ Request (internal only)
   "status": "In Flight"
 }
 
-Used for:
-- live movement updates
-- final landing update
+26. CLI Commands
+The server includes a command-line administrative interface.
 
-Allowed statuses: (still deciding...)
-Scheduled
-Boarding
-In Flight / In Air
-Arrived
+FLIGHT_STATUS
+1. Displays current flight information.
+Command
+FLIGHT_STATUS 3
 
-9. Client Management Rules
-Each WebSocket client stores:
-ws.username   // email
-ws.role       // ATC | PASSENGER
-ws.apikey     // PHP API key
+Example Output:
 
-Client restrictions:
-- PASSENGER → can only track flights they are booked on
-- ATC → can dispatch and track all flights
-- Only one connection per user allowed
+Flight: SA123
+Status: In Flight
+Coordinates: (-26.1, 28.3)
+Passengers boarded: 4/6
+Estimated time remaining: 5.2 seconds
+KILL
 
-10. Subscription System
-TRACKING STORAGE
-flightId => Set<WebSocket>
+2. Forcefully disconnect a user.
+Command
+KILL john@example.com
 
-Example:
-3 => { ws1, ws2, ws5 }
-
-SUBSCRIBE
-Adds client to flight stream
-
-UNSUBSCRIBE
-Auto-removes on disconnect
-
-11. Flight Simulation Rules
-Flight duration scaling:
-REAL HOURS → SIMULATED SECONDS
-
-Example:
-14 hour flight → 14 seconds animation
-
-Movement updates:
-Every 100ms:
--position interpolated(calculated) between airports
--progress updated (0 → 1)
-
-12. WebSocket Error Format
-All errors follow:
+Client Receives
 {
-  "type": "ERROR",
-  "message": "Description of error"
+  "type": "KILLED",
+  "message": "You were disconnected by the server"
 }
 
-13. Full System Flow
-Passenger:
-- LOGIN
-- TRACK flight
-- receive FLIGHT_UPDATE
-- receive FLIGHT_COMPLETE
+QUIT
+3. Gracefully shuts down the WebSocket server.
 
-ATC:
-- LOGIN
-- DISPATCH flight
-- server starts simulation
-- passengers receive live updates
+Connected Clients Receive
+{
+  "type": "SHUTDOWN",
+  "message": "Server shutting down"
+}
 
-14. Important Notes (for testers)
-- Must login before any action
-- Must use valid PHP API key
-- Flight must be in Scheduled state before dispatch
-- Tracking must happen before or during dispatch
-- WebSocket does NOT store persistent state
+27. Client Rules
+Rule	                    Description
+Login required	        - Must LOGIN before actions
+One session only	      - Duplicate logins rejected
+ATC restricted actions	- Only ATC can DISPATCH
+Passenger restrictions	- Passenger can only TRACK booked flights
+Boarding required	      - Must BOARD during boarding window
 
-15. Flight Movement Engine (Core System)
+28. Error Format
+ALL errors follow:
 
-When a flight is dispatched:
-1. DISPATCH message received
-2. PHP API updates flight → Boarding
-3. GetFlight retrieves full flight data
-4. startFlightTracking(flight) is called
+{
+  "type": "ERROR",
+  "message": "Description"
+}
 
-Inside flightTracker:
-- Creates FlightMovement instance
-- Starts interval timer (100ms ticks)
+29. Full System Flow
+Passenger Flow
+Connect
+LOGIN
+TRACK flight
+Receive BOARDING_CALL
+Send BOARD
+Receive POSITION updates
+Receive LANDED event
+ATC Flow
+Connect
+LOGIN
+DISPATCH flight
+Receive PASSENGER_BOARDED notifications
+Monitor flight progress
 
-Each tick:
-- Calculates new lat/lon
-- Calls UpdateFlightPosition API
-- Broadcasts FLIGHT_UPDATE to all subscribers
+30. Where Everything Happens
+Feature	                  File
+WebSocket Server	        - server.js
+Message Processing	      - messageHandler.js
+Flight Simulation	        - flightTracker.js
+Position Calculations	    - flightMovement.js
+API Communication	        - apiService.js
+Boarding Windows	        - boardingManager.js
+Airport Lookup	          - airportCache.js
+Socket Safety	            - socketUtils.js
+Subscription Tracking	    - subscriptionManager.js
+Client Storage	          - clientManager.js
 
-When progress reaches 1:
-- Calls UpdateFlightPosition with status: Arrived
-- Broadcasts FLIGHT_COMPLETE
-- Removes flight from activeFlights
+31. Important Notes for Testers
+Must LOGIN first
+Flight must exist
+Flight must be scheduled before dispatch
+ATC only may DISPATCH
+Boarding expires automatically
+Position updates occur every 100ms
+Flight duration is accelerated
+WebSocket server stores runtime state only
+Restarting server clears active 
 
-16 WHERE EVERYTHING RUNS
-DISPATCH → messageHandler.js
-TRACK → subscriptionManager.js
-MOVEMENT → flightTracker.js + FlightMovement.js
-BROADCAST → WebSocket send loop inside flightTracker.js
-API SYNC → apiService.js
-NOTE: every <MESSAGE_TYPE> is sent to messageHandler.js where it will be handled accordingly
+32. Example Full Passenger Session
+LOGIN
+{
+  "type": "LOGIN",
+  "email": "passenger@test.com",
+  "password": "Password123!"
+}
+TRACK
+{
+  "type": "TRACK",
+  "flight_id": 3
+}
+BOARD
+{
+  "type": "BOARD",
+  "flight_id": 3
+}
+
+33. Example Full ATC Session
+LOGIN
+{
+  "type": "LOGIN",
+  "email": "atc@test.com",
+  "password": "Password123!"
+}
+DISPATCH
+{
+  "type": "DISPATCH",
+  "flight_id": 3
+}
