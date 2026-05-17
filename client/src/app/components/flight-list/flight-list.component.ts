@@ -39,8 +39,7 @@ export class FlightListComponent implements OnInit {
         this.flights.set(msg.flights);
         this.loading.set(false);
       }
-      if (msg.type === 'BOARDING_CALL') {
-        // Update flight status locally or reload
+      if (msg.type === 'BOARDING_CALL' || msg.type === 'DISPATCHED') {
         this.loadFlights();
       }
     });

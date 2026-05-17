@@ -38,7 +38,7 @@
 
       <div class="flight-meta">
         <span>⏱️ {{ flight.flight_duration_hours }}h duration</span>
-        <span *ngIf="flight.progress">📍 {{ flight.progress.toFixed(0) }}% progress</span>
+        <span *ngIf="flight.progress !== undefined">📍 {{ (flight.progress * 100).toFixed(0) }}% progress</span>
       </div>
 
       <div class="flight-actions">

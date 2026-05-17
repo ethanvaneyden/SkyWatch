@@ -99,10 +99,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       marker.setLatLng([data.latitude, data.longitude]);
     }
 
+    const progressPercent = typeof data.progress === 'number' ? (data.progress * 100).toFixed(1) : '0.0';
     marker.setPopupContent(`
       <b>Flight ${data.flight_id}</b><br>
       Status: ${data.status}<br>
-      Progress: ${data.progress.toFixed(1)}%
+      Progress: ${progressPercent}%
     `);
   }
 }

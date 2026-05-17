@@ -44,6 +44,7 @@ function startFlightTracking(flight){
             started = true;
 
             //broadcast to subscribers
+            const status = 'In Flight';
             const subscribers = getSubscribers(update.flight_id);
             subscribers.forEach((ws) => {
                 if(ws.readyState === 1){
@@ -52,7 +53,8 @@ function startFlightTracking(flight){
                         flight_id: update.flight_id,
                         latitude: update.latitude,
                         longitude: update.longitude,
-                        progress: update.progress
+                        progress: update.progress,
+                        status
                     });
                 }
             });
@@ -91,10 +93,15 @@ function startFlightTracking(flight){
     );
 
     movement.start();
+
+    // Record actual simulated duration (ms) using the same SIMULATION_SPEED as FlightMovement
+    const simSpeed = Number(process.env.SIMULATION_SPEED) || 1;
+    const durationMs = Number(flight.flight_duration_hours) * 3600000 / simSpeed;
+
     activeFlights.set(flight.flight_id, {
         movement,
         startedAt: Date.now(),
-        durationMs: flight.flight_duration_hours * 1000
+        durationMs
     });
 
     return true;

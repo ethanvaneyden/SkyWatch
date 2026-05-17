@@ -10,10 +10,10 @@ class FlightMovement{
     }
 
     start(){
-        let durationMs = Number(this.flight.flight_duration_hours) * 3600000;
+        let durationMs = Number(this.flight.flight_duration_hours) * 1000;
         if (!Number.isFinite(durationMs) || durationMs <= 0) {
             console.warn(`Invalid flight_duration_hours=${this.flight.flight_duration_hours}; defaulting to 1 hour`);
-            durationMs = 3600000;
+            durationMs = 3600000 / (simSpeed || 1);
         }
         const stepTime = 100;
 
