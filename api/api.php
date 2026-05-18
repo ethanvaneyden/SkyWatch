@@ -385,6 +385,9 @@ class PlanesService
             'model',
             'manufacturer',
             'classes',
+            'max_range_km', 
+            'max_cargo_kg', 
+            'max_speed_kmh'
         ];
 
         //Injection safe compared to whitelist
@@ -520,7 +523,9 @@ class AirportsService
     {
         try {
             $stmt = $this->db->query("SELECT *
-        FROM airports");
+        FROM airports
+        ORDER by id
+        LIMIT 50");
             $airports = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return [
                 'status' => 'success',
